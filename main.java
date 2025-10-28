@@ -1,6 +1,7 @@
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Scanner;
+import java.util.stream.Collectors;
 import java.io.File;
 import java.io.FileNotFoundException;
 public class Main {
@@ -8,14 +9,17 @@ public class Main {
         printInstructions();
         makeGuesses();
     }
-
+    /**
+     * Reads words from word file and saves all five letter words to a list while making them lowercase.
+     * @return List of five letter words.
+     */
     public static List<String> getWordsFromFile() {
         List<String> words = new ArrayList<>();
         try (Scanner scanner = new Scanner (new File("words.txt"))) {
             while (scanner.hasNextLine()) {
                 String line = scanner.nextLine();
                 if (line.length() == 5) {
-                    words.add(line);
+                    words.add(line.toLowerCase());
                 }
             }
         } catch (FileNotFoundException e) {
@@ -23,30 +27,75 @@ public class Main {
         }    
         return words;
     }
-
-    public static void printInstructions() {
-        System.out.println("Welcome to Reverse Wordle! I will try to guess your word. \nFor each guess, you need to enter an evaluation string.\nThe evaluation string consists of one character for each letter in the guess.\nFor each correct letter in the correct place, that letter capitalized.\nFor each correct letter in the incorrect place, that letter lowercase.\nFor each incorrect letter, an underscore.");
-    }
-
-    public static void makeGuesses() {
-        List<String> possibleWords = getWordsFromFile();
-        int randIndex = (int)(Math.random() * possibleWords.size());
-        System.out.println("My guess is: " + possibleWords.get(randIndex));
-        Scanner scanner = new Scanner(System.in);
-        String evaluation = scanner.nextLine();
-        for (int i = 0; i < evaluation.length(); i++) {
+    /**
+     * Filters words based on the evaluation of the guess.
+     * @param word - word to be tested
+     * @param guess - the guessed word
+     * @param evaluation - the evaluation string
+     * @return true if the word passes the filter, false otherwise
+     */
+    public static boolean filteredWords(String word, String guess, String evaluation) {
+        for (int i = 0; i < 5; i++) {
             final int idx = i;
             char evalChar = evaluation.charAt(idx);
-            char guessChar = possibleWords.get(randIndex).charAt(idx);
+            char guessChar = guess.charAt(idx);
             if (evalChar == '_') {
-                possibleWords.removeIf(word -> word.indexOf(guessChar) != -1);
+                if (word.contains("" + guessChar)) return false;
             } else if (Character.isLowerCase(evalChar)) {
-                possibleWords.removeIf(word -> word.indexOf(evalChar) == -1 || word.charAt(idx) == evalChar);
+                if (word.charAt(idx) == evalChar || !word.contains("" + evalChar)) return false;
             } else if (Character.isUpperCase(evalChar)) {
-                possibleWords.removeIf(word -> word.charAt(idx) != evalChar);
+                if (word.charAt(idx) != Character.toLowerCase(evalChar)) return false;
             }
         }
 
-        scanner.close();
+        return true;
+    }
+    /**
+     * Makes guesses until the correct word is found or no possible words remain.
+     */
+    public static void makeGuesses() {
+        List<String> possibleWords = getWordsFromFile();
+    
+        Scanner scanner = new Scanner(System.in);
+
+        while (!possibleWords.isEmpty()) {
+            String randomWord = possibleWords.get((int)(Math.random() * possibleWords.size()));
+            System.out.println("My guess is: " + randomWord);
+
+            String evaluation = scanner.nextLine();
+    
+            if (evaluation.equals(randomWord.toUpperCase())) {
+                System.out.println("Yay! I guessed your word!");
+                break;
+            }
+
+            final String currentGuess = randomWord;
+            final String currentEval = evaluation;
+        
+            possibleWords = possibleWords.stream()
+                .filter(word -> filteredWords(word, currentGuess, currentEval))
+                .collect(Collectors.toList());
+
+            if (possibleWords.size() == 1) {
+                System.out.println("I have guessed your word! Is it: " + possibleWords.get(0) + "?");
+                String confirmation = scanner.nextLine();
+                if (confirmation.equalsIgnoreCase("yes")) {
+                    System.out.println("Yay! I guessed your word!");
+                } else {
+                    System.out.println("Oh no! I couldn't guess your word.");
+                }
+                break;
+            } else if (possibleWords.isEmpty()) {
+                System.out.println("This word is not in my dictionary. Please try again.");
+            } 
+        }
+    
+    scanner.close();
+    }
+    /**
+     * Prints instructions for the game.
+     */
+    public static void printInstructions() {
+        System.out.println("Welcome to Reverse Wordle! I will try to guess your word. \nFor each guess, you need to enter an evaluation string.\nThe evaluation string consists of one character for each letter in the guess.\nFor each correct letter in the correct place, that letter capitalized.\nFor each correct letter in the incorrect place, that letter lowercase.\nFor each incorrect letter, an underscore.");
     }
 }
