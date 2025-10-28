@@ -5,6 +5,10 @@ import java.util.stream.Collectors;
 import java.io.File;
 import java.io.FileNotFoundException;
 public class Main {
+    /**
+     * Main method that starts program and calls printInstructions and makeGuesses methods.
+     * @param args - allows to pass command line arguments
+     */
     public static void main(String[] args) {
         printInstructions();
         makeGuesses();
