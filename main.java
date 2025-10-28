@@ -28,11 +28,11 @@ public class Main {
         return words;
     }
     /**
-     * Filters words based on the evaluation of the guess.
+     * Filters words based on the evaluation of the guess. if the eval is '_' the letter is not in the word, if it is lowercase the letter is in the word but not in that position, if it is uppercase the letter is in that position.
      * @param word - word to be tested
      * @param guess - the guessed word
      * @param evaluation - the evaluation string
-     * @return true if the word passes the filter, false otherwise
+     * @return true if the word passes the filter, false if the word does not
      */
     public static boolean filteredWords(String word, String guess, String evaluation) {
         for (int i = 0; i < 5; i++) {
@@ -51,7 +51,7 @@ public class Main {
         return true;
     }
     /**
-     * Makes guesses until the correct word is found or no possible words remain.
+     * Makes guesses and filters the list until the correct word is found or the list is empty.
      */
     public static void makeGuesses() {
         List<String> possibleWords = getWordsFromFile();
